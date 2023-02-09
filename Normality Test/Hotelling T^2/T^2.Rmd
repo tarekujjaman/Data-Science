@@ -1,0 +1,66 @@
+---
+title: "Testing a multivariate mean vector with T^2"
+Author: Md. Tarekujjaman Riad
+output:
+  word_document: default
+  html_notebook: default
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r}
+rm(list=ls())
+```
+```{r}
+x=read.table("E:/ASDS/Assignment/Multivariate analysis/JohnsonWichern Data sets/JohnsonWichern Data sets/T5-1.DAT",header=FALSE)
+```
+```{r}
+x
+```
+```{r}
+n = nrow(x)
+```
+
+
+
+```{r}
+n
+```
+```{r}
+p=ncol(x)
+p
+```
+```{r}
+x=as.matrix(x)
+x
+```
+```{r}
+s=round(var(x),2)
+s
+```
+```{r}
+m=round(colMeans(x),2)
+m
+```
+```{r}
+mu=c(4,50,10)
+mu
+```
+```{r}
+Tsq=20*t(m-mu)%*%solve(s)%*%(m-mu)
+Tsq
+```
+```{r}
+ftab=qf(0.10,3,17,lower.tail=FALSE)
+ftab
+```
+```{r}
+critical=((n-1)*p/(n-p))*ftab
+critical
+```
+---
+Here we can see T^2 = 9.74 > 8.18 and that's why we reject the null hypothesis H0 at the 10% level of significance.
+---
+
+
