@@ -1,0 +1,128 @@
+function doPost(e) {
+  try {
+    const data = e.parameter;
+
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    const now = new Date();
+    const timeZone = Session.getScriptTimeZone();
+
+    const rowData = [
+      now,
+      data.date || Utilities.formatDate(now, timeZone, "yyyy-MM-dd"),
+      data.time || Utilities.formatDate(now, timeZone, "HH:mm:ss"),
+      parseInt(data.count),
+      (data.mood || '').toString().substring(0, 100),
+      (data.location || '').toString().substring(0, 100),
+      (data.notes || '').toString().substring(0, 500)
+    ];
+
+    sheet.appendRow(rowData);
+
+    return ContentService.createTextOutput(
+      JSON.stringify({ result: "success", data: rowData })
+    ).setMimeType(ContentService.MimeType.JSON);
+
+  } catch (error) {
+    return ContentService.createTextOutput(
+      JSON.stringify({ result: "error", message: error.message })
+    ).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+function doOptions() {
+  return ContentService.createTextOutput("")
+    .setMimeType(ContentService.MimeType.TEXT);
+}
+
+
+
+
+
+
+
+
+-------------------New---------------------
+
+
+
+// The headers in your Google Sheet should be:
+// Timestamp, Date, Time, Count, Mood, Location, Notes
+
+function doPost(e) {
+  try {
+    const data = e.parameter;
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    const now = new Date(); // The timestamp for when the entry was received
+
+    // Use the data sent from the client-side script
+    const rowData = [
+      now,                  // A: Timestamp
+      data.date,            // B: Date (e.g., "2025-07-14")
+      data.time,            // C: Time (e.g., "14:45:51")
+      parseInt(data.count), // D: Count (e.g., 1)
+      data.mood,            // E: Mood (e.g., "Stress")
+      data.location,        // F: Location (e.g., "Home")
+      data.notes            // G: Notes (optional) - Not currently in your HTML form but supported
+    ];
+
+    sheet.appendRow(rowData);
+
+    return ContentService.createTextOutput(
+      JSON.stringify({ result: "success", data: JSON.stringify(rowData) })
+    ).setMimeType(ContentService.MimeType.JSON);
+
+  } catch (error) {
+    return ContentService.createTextOutput(
+      JSON.stringify({ result: "error", message: error.toString() })
+    ).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function doGet(e) {
+  try {
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    const data = sheet.getDataRange().getValues();
+    
+    if (data.length <= 1) {
+      // Handle empty sheet (only headers or completely empty)
+      return ContentService.createTextOutput(JSON.stringify({ records: [] })).setMimeType(ContentService.MimeType.JSON);
+    }
+
+    const headers = data.shift(); // Remove header row and get header names
+
+    // Convert the array of arrays into an array of objects
+    const records = data.map(row => {
+      let record = {};
+      headers.forEach((header, index) => {
+        const key = header.toLowerCase(); // Use lowercase header names as keys
+        const value = row[index];
+
+        // Format dates and times correctly for JSON
+        if ((key === 'date' || key === 'timestamp') && value instanceof Date) {
+          record[key] = value.toISOString().split('T')[0];
+        } else if (key === 'time' && value instanceof Date) {
+           // This handles cases where time might be stored as a full date object
+          record[key] = value.toTimeString().split(' ')[0];
+        } else {
+          record[key] = value;
+        }
+      });
+      return record;
+    }).reverse(); // Reverse to get the latest entries first
+
+    // Return the data as a JSON object
+    return ContentService
+      .createTextOutput(JSON.stringify({ records: records }))
+      .setMimeType(ContentService.MimeType.JSON);
+
+  } catch (error) {
+     return ContentService.createTextOutput(
+      JSON.stringify({ result: "error", message: error.toString() })
+    ).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+// This function is often required for pre-flight requests from browsers.
+function doOptions() {
+  return ContentService.createTextOutput("")
+    .setMimeType(ContentService.MimeType.TEXT);
+}
